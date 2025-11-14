@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+import dj_database_url
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,6 +85,17 @@ DATABASES = {
     }
 }
 
+if os.environ.get('DATABASE_URL'):
+   
+    DATABASES['default'] = dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600  
+    )
+
+    print("Conexión: Usando PostgreSQL de Render.")
+else:
+    
+    print("Conexión: Usando base de datos local (SQLite).")
 
 # --- Password validation ---
 AUTH_PASSWORD_VALIDATORS = [
