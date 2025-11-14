@@ -14,11 +14,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ----------------------------------------------------
 
 # 1. SECRET_KEY: Leída de Render o del archivo .env_temp
-# Render: Lo lee de la variable de entorno que definiste.
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # 2. DEBUG: Debe ser False en producción (Render)
-# En Render, se recomienda usar 'False'. Para local, puedes usar 'True' en .env.
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # 3. ALLOWED_HOSTS: Determinado por el host de Render para evitar el error 500
@@ -89,44 +87,31 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# ... (El resto de configuraciones como ROOT_URLCONF, TEMPLATES, etc. se mantienen igual)
+ROOT_URLCONF = 'multyproject.urls'
+
+# --- INICIO DE CORRECCIÓN CRÍTICA: BLOQUE TEMPLATES ---
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'], 
+        'APP_DIRS': True, # CRÍTICO: Permite que el admin encuentre sus plantillas
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+# --- FIN DE CORRECCIÓN CRÍTICA ---
+
 WSGI_APPLICATION = 'multyproject.wsgi.application'
 
 # ----------------------------------------------------
 # STATIC FILES Y WHITENOISE
 # ----------------------------------------------------
 
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-# ... (El resto de configuraciones como AUTH_PASSWORD_VALIDATORS, DJOSER, SPECTACULAR_SETTINGS)
-
-# --- Password validation ---
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
-
-
-# --- Internationalization ---
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_TZ = True
-
-
-# --- Static files (CSS, JavaScript, Images) ---
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
@@ -172,3 +157,27 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+
+# --- Password validation ---
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+
+# --- Internationalization ---
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
