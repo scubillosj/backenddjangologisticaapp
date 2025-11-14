@@ -26,7 +26,7 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
 if RENDER_EXTERNAL_HOSTNAME:
     # Acepta la URL pública de Render y su subdominio (www.)
-    ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME, f'www.{RENDER_EXTERNAL_HOSTNAME}']
+    ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME, 'www.' + RENDER_EXTERNAL_HOSTNAME]
 else:
     # Hosts permitidos para desarrollo local
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
