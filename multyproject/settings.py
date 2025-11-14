@@ -181,3 +181,8 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
+
+
+SUPERUSER_NAME = os.environ.get("DJ_SU_NAME")
+SUPERUSER_EMAIL = os.environ.get("DJ_SU_EMAIL")
+SUPERUSER_PASSWORD = os.environ.get("DJ_SU_PASSWORD")
