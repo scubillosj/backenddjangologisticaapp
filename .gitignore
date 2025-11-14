@@ -16,3 +16,5 @@ db.sqlite3
 .DS_Store
 *.log
 
+# Archivo de entorno
+.env_temp

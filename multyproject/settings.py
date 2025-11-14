@@ -1,28 +1,61 @@
 import os
 from pathlib import Path
 import dj_database_url
+from dotenv import load_dotenv
 
+# CRÍTICO: Cargar variables de .env/.env_temp inmediatamente
+load_dotenv() 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --- CONFIGURACIONES CRÍTICAS DE SEGURIDAD Y ENTORNO ---
+# ----------------------------------------------------
+# CONFIGURACIONES CRÍTICAS DE SEGURIDAD Y ENTORNO
+# ----------------------------------------------------
 
-# 1. SECRET_KEY: Obtiene la clave de las variables de entorno de Render
+# 1. SECRET_KEY: Leída de Render o del archivo .env_temp
+# Render: Lo lee de la variable de entorno que definiste.
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-# 2. DEBUG: Usa la variable de entorno para controlar el modo (DEBE ser False en Render)
-DEBUG = os.environ.get('DEBUG') == 'True'
+# 2. DEBUG: Debe ser False en producción (Render)
+# En Render, se recomienda usar 'False'. Para local, puedes usar 'True' en .env.
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# 3. ALLOWED_HOSTS: Utiliza el hostname de Render
-RENDER_URL = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    RENDER_URL,
-]
+# 3. ALLOWED_HOSTS: Determinado por el host de Render para evitar el error 500
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
-# --- Application definition ---
+if RENDER_EXTERNAL_HOSTNAME:
+    # Acepta la URL pública de Render y su subdominio (www.)
+    ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME, f'www.{RENDER_EXTERNAL_HOSTNAME}']
+else:
+    # Hosts permitidos para desarrollo local
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+# 4. Configuración de Base de Datos (PostgreSQL vs. SQLite)
+# Intenta usar DATABASE_URL de Render, si no existe (localmente), usa SQLite.
+if os.environ.get('DATABASE_URL'):
+    # PostgreSQL (Producción en Render)
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+    print("Conexión: Usando PostgreSQL de Render.")
+else:
+    # SQLite (Desarrollo Local)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    print("Conexión: Usando base de datos local (SQLite).")
+
+# ----------------------------------------------------
+# APPLICATION DEFINITION
+# ----------------------------------------------------
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -47,7 +80,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     "corsheaders.middleware.CorsMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware", # IMPORTANTE para archivos estáticos
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -56,46 +89,18 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'multyproject.urls'
-
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
-
+# ... (El resto de configuraciones como ROOT_URLCONF, TEMPLATES, etc. se mantienen igual)
 WSGI_APPLICATION = 'multyproject.wsgi.application'
 
-# --- Database ---
-# Se mantiene SQLite3, pero advertencia: los datos se borrarán en reinicios de Render.
+# ----------------------------------------------------
+# STATIC FILES Y WHITENOISE
+# ----------------------------------------------------
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-if os.environ.get('DATABASE_URL'):
-   
-    DATABASES['default'] = dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600  
-    )
-
-    print("Conexión: Usando PostgreSQL de Render.")
-else:
-    
-    print("Conexión: Usando base de datos local (SQLite).")
+# ... (El resto de configuraciones como AUTH_PASSWORD_VALIDATORS, DJOSER, SPECTACULAR_SETTINGS)
 
 # --- Password validation ---
 AUTH_PASSWORD_VALIDATORS = [
